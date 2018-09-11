@@ -7,9 +7,10 @@ from selenium.common import exceptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from setting import CHROME_DRIVER_PATH
 import sys
 import time
+
+CHROME_DRIVER_PATH = 'D:\SOFTWARE\Google\Chrome\Application\chromedriver.exe'
 
 
 class HaoHuo:
@@ -113,22 +114,24 @@ class HaoHuo:
         return materials
 
     # 获取亮点
-    def get_highlight(self):
+    def get_highlight(self, log_mode=True):
         items = self.items
         if items is None:
             print('[亮点] 商品列表为空，无法获取')
             return None
 
-        return self._open_items(items, self._get_highlight)
+        return self._open_items(items, log_mode, self._get_highlight)
 
     def _get_highlight(self):
         for highlight_loc in self._highlight_locs:
             highlight_elements = self._find_elements(highlight_loc)
             if highlight_elements is not None:
                 # print(f'[亮点] {[highlight.text for highlight in highlight_elements]}')
-                return [highlight.text for highlight in highlight_elements]
-        print('[亮点] 未成功解析出亮点')
-        return None
+                return [highlight.text for highlight
+                        in highlight_elements
+                        if ('好在哪里' not in highlight.text)]
+        # print('[亮点] 未成功解析出亮点')
+        return []
 
     # 获取设计亮点
     def get_addition(self, log_mode=True):
@@ -168,7 +171,7 @@ class HaoHuo:
 
         return result
 
-    def get_data(self):
+    def get_data(self, log_mode=True):
         items = self.items
         if items is None:
             print('[全部资料] 商品列表为空，无法获取')
@@ -180,7 +183,7 @@ class HaoHuo:
             'highlight': [],
             'addition': []
         } for title in titles]
-        contents = self._open_items(items, self._get_highlight, self._get_addition)
+        contents = self._open_items(items, log_mode, self._get_highlight, self._get_addition)
 
         for i in range(len(items_data)):
             items_data[i]['highlight'] = contents[i][0]
@@ -224,7 +227,7 @@ class HaoHuo:
         return result
 
     # 查找元素
-    def _find_element(self, loc, delay_time=1):
+    def _find_element(self, loc, delay_time=0.5):
         try:
             element = WebDriverWait(self._driver, delay_time).until(
                 EC.presence_of_element_located(loc)
@@ -233,7 +236,7 @@ class HaoHuo:
         except exceptions.TimeoutException:
             return None
 
-    def _find_elements(self, loc, delay_time=1):
+    def _find_elements(self, loc, delay_time=0.5):
         try:
             elements = WebDriverWait(self._driver, delay_time).until(
                 EC.presence_of_all_elements_located(loc)
